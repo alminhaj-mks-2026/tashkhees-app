@@ -50,12 +50,16 @@ export default function App() {
     return unsubscribe;
   }, []);
 
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    setLoginError(null);
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed", error);
+      setLoginError(`Login failed: ${error.code} - ${error.message}`);
     }
   };
 
@@ -84,6 +88,7 @@ export default function App() {
         <LogIn size={20} />
         گوگل کے ساتھ لاگ ان کریں
       </button>
+      {loginError && <p className="text-red-500 mt-4 text-center">{loginError}</p>}
     </div>
   );
 

@@ -3,7 +3,7 @@ import { User, Calendar, Clock, BookOpen, AlertCircle, X, ChevronDown, LogIn } f
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, onSnapshot } from 'firebase/firestore';
 import { UserManagementModal } from './components/UserManagementModal';
 
 
@@ -43,14 +43,40 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    let unsubscribeUser: any;
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
+      if (unsubscribeUser) unsubscribeUser();
+      
+      if (currentUser) {
+        unsubscribeUser = onSnapshot(doc(db, 'users', currentUser.email!), (docSnapshot) => {
+          const isAdminUser = currentUser.email === 'abdulhafeeza871@gmail.com';
+          if ((docSnapshot.exists() && docSnapshot.data().status === 'active') || isAdminUser) {
+            setIsAuthorized(true);
+          } else {
+            setIsAuthorized(false);
+            setAuthError("آپ اس ایپ تک رسائی کے مجاز نہیں ہیں یا آپ کا اکاؤنٹ غیر فعال ہے۔");
+          }
+          setLoading(false);
+        }, (error) => {
+          setIsAuthorized(false);
+          setAuthError("رسائی کی تصدیق میں خرابی۔");
+          setLoading(false);
+        });
+      } else {
+        setIsAuthorized(false);
+        setLoading(false);
+      }
     });
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeUser) unsubscribeUser();
+    };
   }, []);
 
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -89,6 +115,13 @@ export default function App() {
         گوگل کے ساتھ لاگ ان کریں
       </button>
       {loginError && <p className="text-red-500 mt-4 text-center">{loginError}</p>}
+    </div>
+  );
+
+  if (!isAuthorized) return (
+    <div className="min-h-screen bg-[#071426] flex flex-col items-center justify-center p-4 text-center">
+      <p className="text-red-500 mb-4">{authError}</p>
+      <button onClick={() => signOut(auth)} className="bg-[#D6B56D] text-[#071426] px-6 py-3 rounded-xl font-bold">لاگ آؤٹ</button>
     </div>
   );
 

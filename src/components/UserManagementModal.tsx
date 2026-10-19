@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export function UserManagementModal({ onClose }: { onClose: () => void }) {
@@ -17,8 +17,8 @@ export function UserManagementModal({ onClose }: { onClose: () => void }) {
 
   const addUser = async () => {
     if (!newUser.name || !newUser.email) return;
-    if (users.find(u => u.email === newUser.email)) return;
-    await addDoc(collection(db, 'users'), {
+    // Removed check for existing email, as setDoc will overwrite/create
+    await setDoc(doc(db, 'users', newUser.email), {
       ...newUser,
       status: 'active',
       isAdmin: false,

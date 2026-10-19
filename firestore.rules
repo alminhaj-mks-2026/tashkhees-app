@@ -2,19 +2,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
-    function isEmailVerified() { return request.auth.token.email_verified == true; }
     function isAdmin() { return isSignedIn() && request.auth.token.email == 'abdulhafeeza871@gmail.com'; }
+    function isAuthorized() {
+      return isSignedIn() && (isAdmin() || (exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.status == 'active'));
+    }
 
-    match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    match /users/{userEmail} {
+      allow read: if isSignedIn() && (request.auth.token.email == userEmail || isAdmin());
       allow list: if isAdmin();
       allow create: if isAdmin() && request.resource.data.status in ['active', 'inactive'];
-      allow update: if isAdmin() && (resource.data.email != 'abdulhafeeza871@gmail.com' || request.resource.data.status == 'active');
-      allow delete: if isAdmin() && resource.data.email != 'abdulhafeeza871@gmail.com';
+      allow update: if isAdmin() && (userEmail != 'abdulhafeeza871@gmail.com' || request.resource.data.status == 'active');
+      allow delete: if isAdmin() && userEmail != 'abdulhafeeza871@gmail.com';
     }
 
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if isAuthorized();
+      allow write: if false;
     }
   }
 }

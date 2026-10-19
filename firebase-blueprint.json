@@ -1,0 +1,23 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "Authorized users",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "isAdmin": { "type": "boolean" },
+        "authorizedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "user" },
+      "description": "Authorized user records"
+    }
+  }
+}

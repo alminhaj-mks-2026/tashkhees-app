@@ -49,20 +49,26 @@ export default function App() {
       if (unsubscribeUser) unsubscribeUser();
       
       if (currentUser) {
-        unsubscribeUser = onSnapshot(doc(db, 'users', currentUser.email!.toLowerCase()), (docSnapshot) => {
-          const isAdminUser = currentUser.email?.toLowerCase() === 'abdulhafeeza871@gmail.com';
-          if ((docSnapshot.exists() && docSnapshot.data().status === 'active') || isAdminUser) {
-            setIsAuthorized(true);
-          } else {
+        if (currentUser.email) {
+          unsubscribeUser = onSnapshot(doc(db, 'users', currentUser.email!.toLowerCase()), (docSnapshot) => {
+            const isAdminUser = currentUser.email?.toLowerCase() === 'abdulhafeeza871@gmail.com';
+            if ((docSnapshot.exists() && docSnapshot.data().status === 'active') || isAdminUser) {
+              setIsAuthorized(true);
+            } else {
+              setIsAuthorized(false);
+              setAuthError("آپ اس ایپ تک رسائی کے مجاز نہیں ہیں یا آپ کا اکاؤنٹ غیر فعال ہے۔");
+            }
+            setLoading(false);
+          }, (error) => {
             setIsAuthorized(false);
-            setAuthError("آپ اس ایپ تک رسائی کے مجاز نہیں ہیں یا آپ کا اکاؤنٹ غیر فعال ہے۔");
-          }
-          setLoading(false);
-        }, (error) => {
+            setAuthError("رسائی کی تصدیق میں خرابی۔");
+            setLoading(false);
+          });
+        } else {
           setIsAuthorized(false);
-          setAuthError("رسائی کی تصدیق میں خرابی۔");
+          setAuthError("ای میل ایڈریس دستیاب نہیں ہے۔");
           setLoading(false);
-        });
+        }
       } else {
         setIsAuthorized(false);
         setLoading(false);

@@ -25,7 +25,7 @@ export function UserManagementModal({ onClose }: { onClose: () => void }) {
     if (!newUser.name || !newUser.email) return;
     setLoadingActions(prev => ({ ...prev, [newUser.email]: true }));
     try {
-      const email = newUser.email.trim().toLowerCase();
+      const email = newUser.email.trim().toLowerCase().replace('@gaamil.com', '@gmail.com');
       await setDoc(doc(db, 'users', email), {
         name: newUser.name,
         email: email,
@@ -93,6 +93,20 @@ export function UserManagementModal({ onClose }: { onClose: () => void }) {
             <button onClick={onClose}><X /></button>
           </div>
           
+          <button onClick={async () => {
+              const firestore = await import('firebase/firestore');
+              const { db } = await import('../firebase');
+              await firestore.setDoc(firestore.doc(db, 'users', 'younusroomi1122@gmail.com'), {
+                name: 'Younus Roomi',
+                email: 'younusroomi1122@gmail.com',
+                status: 'active',
+                isAdmin: false,
+                authorizedAt: firestore.serverTimestamp()
+              });
+              await firestore.deleteDoc(firestore.doc(db, 'users', 'younusroomi1122@gaamil.com'));
+              alert('Fixed!');
+          }} className="w-full p-2 bg-yellow-600 text-white rounded mb-2">FIX USER</button>
+
           {showForm ? (
             <div className="bg-[#162B49] p-4 rounded-lg space-y-3">
               <input placeholder="صارف کا نام" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className="w-full bg-[#071426] p-2 rounded" />

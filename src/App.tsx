@@ -49,8 +49,8 @@ export default function App() {
       if (unsubscribeUser) unsubscribeUser();
       
       if (currentUser) {
-        unsubscribeUser = onSnapshot(doc(db, 'users', currentUser.email!), (docSnapshot) => {
-          const isAdminUser = currentUser.email === 'abdulhafeeza871@gmail.com';
+        unsubscribeUser = onSnapshot(doc(db, 'users', currentUser.email!.toLowerCase()), (docSnapshot) => {
+          const isAdminUser = currentUser.email?.toLowerCase() === 'abdulhafeeza871@gmail.com';
           if ((docSnapshot.exists() && docSnapshot.data().status === 'active') || isAdminUser) {
             setIsAuthorized(true);
           } else {

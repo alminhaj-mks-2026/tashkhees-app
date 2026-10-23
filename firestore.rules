@@ -2,13 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
-    function isAdmin() { return isSignedIn() && request.auth.token.email.matches('(?i)abdulhafeeza871@gmail.com'); }
+    function isAdmin() { return isSignedIn() && request.auth.token.email.trim().toLowerCase() == 'abdulhafeeza871@gmail.com'; }
     function isAuthorized() {
-      return isSignedIn() && (isAdmin() || (exists(/databases/$(database)/documents/users/$(request.auth.token.email)) && get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.status == 'active'));
+      let email = request.auth.token.email.trim().toLowerCase();
+      return isSignedIn() && (isAdmin() || (exists(/databases/$(database)/documents/users/$(email)) && get(/databases/$(database)/documents/users/$(email)).data.status == 'active'));
     }
 
     match /users/{userEmail} {
-      allow read: if isSignedIn() && (request.auth.token.email == userEmail || isAdmin());
+      allow read: if isSignedIn() && (request.auth.token.email.trim().toLowerCase() == userEmail.trim().toLowerCase() || isAdmin());
       allow list: if isAdmin();
       allow create: if isAdmin() && request.resource.data.status in ['active', 'inactive'];
       allow update: if isAdmin() && (userEmail != 'abdulhafeeza871@gmail.com' || request.resource.data.status == 'active');
